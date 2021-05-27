@@ -3759,7 +3759,11 @@ void FNiagaraDataInterfaceProxyHoudini::UpdateFunctionIndexToAttributeIndexBuffe
 
 	if (BufferSize > 0)
 	{
+#if ENGINE_MAJOR_VERSION == 5
+		FunctionIndexToAttributeIndexGPUBuffer.Initialize(TEXT("FunctionIndexToAttributeIndexGPUBuffer"), sizeof(int32), NumFunctions, EPixelFormat::PF_R32_SINT, BUF_Static);
+#else
 		FunctionIndexToAttributeIndexGPUBuffer.Initialize(sizeof(int32), NumFunctions, EPixelFormat::PF_R32_SINT, BUF_Static);
+#endif
 		int32* BufferData = static_cast<int32*>(RHILockVertexBuffer(FunctionIndexToAttributeIndexGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
 		FPlatformMemory::Memcpy(BufferData, FunctionIndexToAttributeIndex.GetData(), BufferSize);
 		RHIUnlockVertexBuffer(FunctionIndexToAttributeIndexGPUBuffer.Buffer);

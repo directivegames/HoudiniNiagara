@@ -40,7 +40,11 @@
 #define LOCTEXT_NAMESPACE "HoudiniNiagaraPointCacheAsset"
 
 DEFINE_LOG_CATEGORY(LogHoudiniNiagara);
- 
+
+#if ENGINE_MAJOR_VERSION == 5
+#define RHILockVertexBuffer RHILockBuffer
+#define RHIUnlockVertexBuffer RHIUnlockBuffer
+#endif
 
 UHoudiniPointCache::UHoudiniPointCache( const FObjectInitializer& ObjectInitializer )
 	: Super( ObjectInitializer ),
@@ -1136,9 +1140,14 @@ void FHoudiniPointCacheResource::InitRHI()
 	{
 		int32 NumElements = CachedData->FloatData.Num();
 		FloatValuesGPUBuffer.Release();
-		FloatValuesGPUBuffer.Initialize(sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
 
-		uint32 BufferSize = NumElements * sizeof(float);
+#if ENGINE_MAJOR_VERSION == 5
+		FloatValuesGPUBuffer.Initialize(TEXT("FloatValuesGPUBuffer"), sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#else
+		FloatValuesGPUBuffer.Initialize(sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#endif
+
+		uint32 BufferSize = NumElements * sizeof(float);		
 		float* BufferData = static_cast<float*>(RHILockVertexBuffer(FloatValuesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
 
 		FPlatformMemory::Memcpy(BufferData, CachedData->FloatData.GetData(), BufferSize);
@@ -1151,10 +1160,18 @@ void FHoudiniPointCacheResource::InitRHI()
 		uint32 NumElements = CachedData->SpecialAttributeIndexes.Num();
 
 		SpecialAttributeIndexesGPUBuffer.Release();
+#if ENGINE_MAJOR_VERSION == 5
+		SpecialAttributeIndexesGPUBuffer.Initialize(TEXT("SpecialAttributeIndexesGPUBuffer"), sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#else
 		SpecialAttributeIndexesGPUBuffer.Initialize(sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#endif
 
 		uint32 BufferSize = NumElements * sizeof(int32);
+#if ENGINE_MAJOR_VERSION == 5
+		float* BufferData = static_cast<float*>(RHILockBuffer(SpecialAttributeIndexesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
+#else
 		float* BufferData = static_cast<float*>(RHILockVertexBuffer(SpecialAttributeIndexesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
+#endif
 
 		FPlatformMemory::Memcpy(BufferData, CachedData->SpecialAttributeIndexes.GetData(), BufferSize);
 
@@ -1167,7 +1184,11 @@ void FHoudiniPointCacheResource::InitRHI()
 
 
 		SpawnTimesGPUBuffer.Release();
+#if ENGINE_MAJOR_VERSION == 5
+		SpawnTimesGPUBuffer.Initialize(TEXT("SpawnTimesGPUBuffer"), sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#else
 		SpawnTimesGPUBuffer.Initialize(sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#endif
 
 		uint32 BufferSize = NumElements * sizeof(float);
 		float* BufferData = static_cast<float*>(RHILockVertexBuffer(SpawnTimesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
@@ -1182,7 +1203,11 @@ void FHoudiniPointCacheResource::InitRHI()
 		uint32 NumElements = CachedData->LifeValues.Num();
 
 		LifeValuesGPUBuffer.Release();
+#if ENGINE_MAJOR_VERSION == 5
+		LifeValuesGPUBuffer.Initialize(TEXT("LifeValuesGPUBuffer"), sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#else
 		LifeValuesGPUBuffer.Initialize(sizeof(float), NumElements, EPixelFormat::PF_R32_FLOAT, BUF_Static);
+#endif
 
 		uint32 BufferSize = NumElements * sizeof(float);
 		float* BufferData = static_cast<float*>(RHILockVertexBuffer(LifeValuesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
@@ -1197,7 +1222,11 @@ void FHoudiniPointCacheResource::InitRHI()
 		uint32 NumElements = CachedData->PointTypes.Num();
 
 		PointTypesGPUBuffer.Release();
+#if ENGINE_MAJOR_VERSION == 5
+		PointTypesGPUBuffer.Initialize(TEXT("PointTypesGPUBuffer"), sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#else
 		PointTypesGPUBuffer.Initialize(sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#endif
 
 		uint32 BufferSize = NumElements * sizeof(int32);
 		int32* BufferData = static_cast<int32*>(RHILockVertexBuffer(PointTypesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
@@ -1213,7 +1242,11 @@ void FHoudiniPointCacheResource::InitRHI()
 		uint32 NumElements = CachedData->PointValueIndexes.Num();
 
 		PointValueIndexesGPUBuffer.Release();
+#if ENGINE_MAJOR_VERSION == 5
+		PointValueIndexesGPUBuffer.Initialize(TEXT("PointValueIndexesGPUBuffer"), sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#else
 		PointValueIndexesGPUBuffer.Initialize(sizeof(int32), NumElements, EPixelFormat::PF_R32_SINT, BUF_Static);
+#endif
 
 		uint32 BufferSize = NumElements * sizeof(int32);
 		int32* BufferData = static_cast<int32*>(RHILockVertexBuffer(PointValueIndexesGPUBuffer.Buffer, 0, BufferSize, EResourceLockMode::RLM_WriteOnly));
@@ -1248,3 +1281,8 @@ void FHoudiniPointCacheResource::ReleaseRHI()
 	PointValueIndexesGPUBuffer.Release();
 }	
 #undef LOCTEXT_NAMESPACE
+
+#if ENGINE_MAJOR_VERSION == 5
+#undef RHILockVertexBuffer
+#undef RHIUnlockVertexBuffer
+#endif
